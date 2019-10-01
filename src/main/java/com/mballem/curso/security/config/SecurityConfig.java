@@ -29,7 +29,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		.antMatchers("/", "/home").permitAll()
 		
 		// acessos privados admin
-		.antMatchers("/u/editar/senha", "/u/confirmar/senha").hasAuthority(MEDICO)
+		.antMatchers("/u/editar/senha", "/u/confirmar/senha").hasAnyAuthority(PACIENTE,MEDICO)
 		.antMatchers("/u/**").hasAuthority(ADMIN)
 		
 		//acessos privados medicos
@@ -64,9 +64,5 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 			throws Exception {
 		
 		auth.userDetailsService(service).passwordEncoder(new BCryptPasswordEncoder());
-	}
-	
-	
-	
-	
+	}	
 }

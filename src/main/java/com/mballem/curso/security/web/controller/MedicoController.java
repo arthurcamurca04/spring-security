@@ -1,14 +1,18 @@
 package com.mballem.curso.security.web.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import com.mballem.curso.security.domain.Medico;
+import com.mballem.curso.security.domain.Usuario;
+import com.mballem.curso.security.service.UsuarioService;
 import com.mballem.curso.security.web.service.MedicoService;
 
 @Controller
@@ -17,16 +21,30 @@ public class MedicoController {
 	
 	@Autowired
 	public MedicoService service;
+	
+	@Autowired
+	public UsuarioService usuarioService;	
 
 	// abrir página de dados pessoais de medicos pelo Médico
 	@GetMapping("/dados")
-	public String cadastroMedico(Medico med, ModelMap model) {
+	public String cadastroMedico(Medico med, ModelMap model, @AuthenticationPrincipal User user) {
+		if(med.hasNotId()) {
+			med = service.buscarPorEmail(user.getUsername());
+			model.addAttribute("medico", med);
+		}
 		return "medico/cadastro";
 	}
 
 	// cadastrar um médico
 	@PostMapping({"/salvar"})
-	public String salvarMedico(Medico med, RedirectAttributes attr) {
+	public String salvarMedico(Medico med, RedirectAttributes attr,
+			@AuthenticationPrincipal User user) {
+		
+		if(med.hasNotId() && med.getUsuario().hasNotId()) {
+			Usuario usuario = usuarioService.buscarPorEmail(user.getUsername());
+			med.setUsuario(usuario);
+		}
+		
 		service.salvarMedico(med);
 		attr.addFlashAttribute("sucesso", "Operação realizada com sucesso!");	
 		attr.addFlashAttribute("medico", med);
@@ -39,6 +57,15 @@ public class MedicoController {
 		service.editarMedico(med);
 		attr.addFlashAttribute("sucesso", "Operação editado com sucesso!");	
 		attr.addFlashAttribute("medico", med);
+		return "redirect:/medicos/dados";
+	}
+	
+	// eexcluir especialidade
+	@GetMapping({"/id/{idMed}/excluir/especializacao/{idEsp}"})
+	public String excluirEspecialidade(@PathVariable("idMed") Long idMed, @PathVariable("idEsp") Long idEsp,
+			RedirectAttributes attr) {
+		service.excluirEspecialidadePorMedico(idMed, idEsp);
+		attr.addFlashAttribute("sucesso", "Especialidade removida com sucesso!");	
 		return "redirect:/medicos/dados";
 	}
 }

@@ -1,6 +1,7 @@
 package com.mballem.curso.security.web.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Controller;
@@ -60,12 +61,23 @@ public class MedicoController {
 		return "redirect:/medicos/dados";
 	}
 	
-	// eexcluir especialidade
+	//excluir especialidade
 	@GetMapping({"/id/{idMed}/excluir/especializacao/{idEsp}"})
 	public String excluirEspecialidade(@PathVariable("idMed") Long idMed, @PathVariable("idEsp") Long idEsp,
 			RedirectAttributes attr) {
-		service.excluirEspecialidadePorMedico(idMed, idEsp);
-		attr.addFlashAttribute("sucesso", "Especialidade removida com sucesso!");	
+		
+		if ( service.existeEspAgendada(idMed, idEsp) ) {
+			attr.addFlashAttribute("falha", "Exclusão negada. Especialidade possui consultas vinculadas");	
+		} else {
+			service.excluirEspecialidadePorMedico(idMed, idEsp);
+			attr.addFlashAttribute("sucesso", "Especialidade removida com sucesso!");	
+		}
+		
 		return "redirect:/medicos/dados";
+	}
+	
+	@GetMapping("/especialidade/titulo/{titulo}")
+	public ResponseEntity<?> getMedicoPorEspecialidade(@PathVariable("titulo") String titulo) {
+		return ResponseEntity.ok(service.buscarMedicosPorEspecialidade(titulo));
 	}
 }

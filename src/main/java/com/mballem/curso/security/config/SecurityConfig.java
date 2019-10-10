@@ -2,6 +2,7 @@ package com.mballem.curso.security.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -11,6 +12,7 @@ import com.mballem.curso.security.domain.PerfilTipo;
 import com.mballem.curso.security.service.UsuarioService;
 
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	
 	private static final String ADMIN = PerfilTipo.ADMIN.getDesc();
@@ -33,6 +35,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		.antMatchers("/u/**").hasAuthority(ADMIN)
 		
 		//acessos privados medicos
+		.antMatchers("/medicos/especialidade/titulo/*").hasAnyAuthority(PACIENTE,MEDICO)		
 		.antMatchers("/medicos/dados", "/medicos/salvar", "/medicos/editar").hasAnyAuthority(MEDICO, ADMIN)
 		.antMatchers("/medicos/**").hasAuthority(MEDICO)		
 
@@ -41,7 +44,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		
 		//acessos privados especialidades
 		.antMatchers("/especialidades/datatables/server/medico/*").hasAnyAuthority(MEDICO, ADMIN)
-		.antMatchers("/especialidades/titulo").hasAnyAuthority(MEDICO, ADMIN)
+		.antMatchers("/especialidades/titulo").hasAnyAuthority(MEDICO, ADMIN, PACIENTE)
 		.antMatchers("/especialidades/**").hasAuthority(ADMIN)
 		
 		.anyRequest().authenticated()
